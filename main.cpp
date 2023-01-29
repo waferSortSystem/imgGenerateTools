@@ -84,7 +84,22 @@ Mat longitudinalStitching(Mat sourceImg1, Mat sourceImg2)//纵向拼接
 	return resultImg;
 }
 
-void generateImgFunction(int imgLength, int imgWidth, string sourceFilePath, string savePath, float coverage, float maxError, int maxLength, int maxWidth){
+bool boundaryJudgment(int x, int y, int imgLength, int imgWidth, int center_x, int center_y, int radius)
+{
+	int x1 = x + imgLength;
+	int y1 = y + imgWidth;
+	// cout<<"x="<<x<<endl;
+	// cout<<"y="<<y<<endl;
+	// cout<<"x1="<<x1<<endl;
+	// cout<<"y1="<<y1<<endl;
+	if((x-center_x) * (x-center_x) + (y-center_y) * (y-center_y) < radius * radius)return true;
+	if((x1-center_x) * (x1-center_x)  + (y-center_y) * (y-center_y) < radius * radius)return true;
+	if((x-center_x) * (x-center_x) + (y1-center_y) * (y1-center_y) < radius * radius)return true;
+	if((x1-center_x) * (x1-center_x) + (y1-center_y) * (y1-center_y) < radius * radius)return true;
+	return false;
+}
+
+void generateImgFunction(int imgLength, int imgWidth, string sourceFilePath, string savePath, float coverage, float maxError, int maxLength, int maxWidth, int center_x, int center_y, int radius){
 
 	deleteAllFiles(savePath);
 
@@ -113,7 +128,7 @@ void generateImgFunction(int imgLength, int imgWidth, string sourceFilePath, str
 	cur_col = 1;
 	int maxColNumber = maxLength / step_x + 1;
 	int maxRowNumber = maxWidth / step_y + 1;
-
+	
 	for(cur_row; cur_row <= maxRowNumber; cur_row++){
 
 		string command;
@@ -128,27 +143,35 @@ void generateImgFunction(int imgLength, int imgWidth, string sourceFilePath, str
 				selectArea = Rect(cur_x * (1 + u(e)), cur_y * (1 + u(e)), maxLength % step_x, maxWidth % step_y);
 				originCompositeImg(selectArea).copyTo(generateImg);
 				cv::copyMakeBorder(generateImg, generateImg, 0, imgWidth - maxWidth % step_y, 0, imgLength - maxLength % step_x, cv::BORDER_CONSTANT);
-				imwrite(path, generateImg);
+				if(boundaryJudgment((cur_col - 1) * step_x, (cur_row - 1) * step_y, imgLength, imgWidth, center_x, center_y, radius)){
+					imwrite(path, generateImg);
+				}
 
 			}else if (cur_col == maxColNumber){
 
 				selectArea = Rect(cur_x * (1 + u(e)), cur_y * (1 + u(e)), maxLength % step_x, imgWidth);
 				originCompositeImg(selectArea).copyTo(generateImg);
 				cv::copyMakeBorder(generateImg, generateImg, 0, 0, 0, imgLength - maxLength % step_x, cv::BORDER_CONSTANT);
-				imwrite(path, generateImg);
+				if(boundaryJudgment((cur_col - 1) * step_x, (cur_row - 1) * step_y, imgLength, imgWidth, center_x, center_y, radius)){
+					imwrite(path, generateImg);
+				}
 
 			}else if(cur_row == maxRowNumber){
 
 				selectArea = Rect(cur_x * (1 + u(e)), cur_y * (1 + u(e)), imgLength, maxWidth % step_y);
 				originCompositeImg(selectArea).copyTo(generateImg);
 				cv::copyMakeBorder(generateImg, generateImg, 0, imgWidth - maxWidth % step_y, 0, 0, cv::BORDER_CONSTANT);
-				imwrite(path, generateImg);
+				if(boundaryJudgment((cur_col - 1) * step_x, (cur_row - 1) * step_y, imgLength, imgWidth, center_x, center_y, radius)){
+					imwrite(path, generateImg);
+				}
 
 			}else{
 
 				selectArea = Rect(cur_x * (1 + u(e)), cur_y * (1 + u(e)), imgLength, imgWidth);
 				generateImg = originCompositeImg(selectArea);
-				imwrite(path, generateImg);
+				if(boundaryJudgment((cur_col - 1) * step_x, (cur_row - 1) * step_y, imgLength, imgWidth, center_x, center_y, radius)){
+					imwrite(path, generateImg);
+				}
 
 			}
 
@@ -171,10 +194,13 @@ int main()
 	string savePath = "D://MyFiles//Code//C++//imgGenerateTools//split";
 	float coverage = 0.5;
 	float maxError = 0.1;
-	int maxLength = 6000;
+	int maxLength = 5000;
 	int maxWidth = 5000;
+	int center_x = 2500; //圆心x
+	int center_y = 2500; //圆心y
+	int radius = 2000; //半径
 
-	generateImgFunction(imgLength, imgWidth, sourceFilePath, savePath, coverage, maxError, maxLength, maxWidth);
+	generateImgFunction(imgLength, imgWidth, sourceFilePath, savePath, coverage, maxError, maxLength, maxWidth, center_x, center_y, radius);
 
 	return 0;
 }
