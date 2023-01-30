@@ -2,9 +2,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/core/core.hpp>
 #include <iostream>
-
+#include <fstream>  
 #include <random>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -112,8 +111,12 @@ void generateImgFunction(int imgLength, int imgWidth, string sourceFilePath, str
 	int y = originImg.rows;//图片的宽度
 
 	Mat originCompositeImg;//原始图片的合成图
-	originCompositeImg = landscapeStitching(originImg, originImg);
-	originCompositeImg = longitudinalStitching(originCompositeImg, originCompositeImg);
+	Mat tmp1, tmp2;
+	tmp1 = landscapeStitching(originImg, originImg);
+	tmp2 = landscapeStitching(tmp1, originImg);//横向拼接
+	tmp1 = longitudinalStitching(tmp2, tmp2);
+	originCompositeImg = longitudinalStitching(tmp1, tmp2);//纵向拼接
+	imwrite("D://MyFiles//Code//C++//imgGenerateTools//origin.jpg", originCompositeImg);
 	
 	int cur_x = 0;
 	int cur_y = 0;
@@ -123,12 +126,22 @@ void generateImgFunction(int imgLength, int imgWidth, string sourceFilePath, str
 	default_random_engine e;
 	uniform_real_distribution<double> u(-maxError, maxError);
 
-	int cur_row, cur_col;
-	cur_row = 1;
-	cur_col = 1;
+	std::random_device rd;  //Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+	std::uniform_int_distribution<> distrib(-maxError, maxError); // 指定范围
+
+	int cur_row = 1;
+	int cur_col = 1;
 	int maxColNumber = maxLength / step_x + 1;
 	int maxRowNumber = maxWidth / step_y + 1;
-	
+
+	if(maxLength % step_x == 0)--maxColNumber;
+	if(maxWidth % step_y == 0)--maxRowNumber;
+
+	ofstream ofs;						//定义流对象
+    ofs.open("output.txt",ios::out);		//以写的方式打开文件
+    ofs<<"行"<<"***"<<"列"<<"***"<<"图像名称"<<"***"<<"标准坐标"<<"***"<<"x偏移"<<"***"<<"y偏移"<<"***"<<"偏移后坐标"<<endl;//写入
+    
 	for(cur_row; cur_row <= maxRowNumber; cur_row++){
 
 		string command;
@@ -138,62 +151,75 @@ void generateImgFunction(int imgLength, int imgWidth, string sourceFilePath, str
 		for(cur_col; cur_col <= maxColNumber; cur_col++){
 			Mat generateImg;
 			path = savePath + "//" + to_string(cur_row) + "//" + to_string(cur_row) + "_" + to_string(cur_col) + ".jpg";
+			int offset_x = distrib(gen);
+			int offset_y = distrib(gen);
 			if(cur_col == maxColNumber && cur_row == maxRowNumber){
 
-				selectArea = Rect(cur_x * (1 + u(e)), cur_y * (1 + u(e)), maxLength % step_x, maxWidth % step_y);
+				// selectArea = Rect(cur_x * (1 + u(e)), cur_y * (1 + u(e)), maxLength % step_x, maxWidth % step_y);
+				selectArea = Rect(x + cur_x + offset_x, y + cur_y + offset_y, maxLength % step_x, maxWidth % step_y);
 				originCompositeImg(selectArea).copyTo(generateImg);
 				cv::copyMakeBorder(generateImg, generateImg, 0, imgWidth - maxWidth % step_y, 0, imgLength - maxLength % step_x, cv::BORDER_CONSTANT);
 				if(boundaryJudgment((cur_col - 1) * step_x, (cur_row - 1) * step_y, imgLength, imgWidth, center_x, center_y, radius)){
+					ofs<<cur_row<<"***"<<cur_col<<"***"<<to_string(cur_row) + "_" + to_string(cur_col) + ".jpg"<<"***"<<"(" + to_string((cur_col - 1) * step_x) + "," + to_string((cur_row - 1) * step_y) + ")"<<"***"<<offset_x<<"***"<<offset_y<<"***"<<"(" + to_string((cur_col - 1) * step_x + offset_x) + "," + to_string((cur_row - 1) * step_y + offset_y) + ")"<<endl;
 					imwrite(path, generateImg);
 				}
 
 			}else if (cur_col == maxColNumber){
 
-				selectArea = Rect(cur_x * (1 + u(e)), cur_y * (1 + u(e)), maxLength % step_x, imgWidth);
+				// selectArea = Rect(cur_x * (1 + u(e)), cur_y * (1 + u(e)), maxLength % step_x, imgWidth);
+				selectArea = Rect(x + cur_x + offset_x, y + cur_y + offset_y, maxLength % step_x, imgWidth);
 				originCompositeImg(selectArea).copyTo(generateImg);
 				cv::copyMakeBorder(generateImg, generateImg, 0, 0, 0, imgLength - maxLength % step_x, cv::BORDER_CONSTANT);
 				if(boundaryJudgment((cur_col - 1) * step_x, (cur_row - 1) * step_y, imgLength, imgWidth, center_x, center_y, radius)){
+					ofs<<cur_row<<"***"<<cur_col<<"***"<<to_string(cur_row) + "_" + to_string(cur_col) + ".jpg"<<"***"<<"(" + to_string((cur_col - 1) * step_x) + "," + to_string((cur_row - 1) * step_y) + ")"<<"***"<<offset_x<<"***"<<offset_y<<"***"<<"(" + to_string((cur_col - 1) * step_x + offset_x) + "," + to_string((cur_row - 1) * step_y + offset_y) + ")"<<endl;
 					imwrite(path, generateImg);
 				}
 
 			}else if(cur_row == maxRowNumber){
 
-				selectArea = Rect(cur_x * (1 + u(e)), cur_y * (1 + u(e)), imgLength, maxWidth % step_y);
+				// selectArea = Rect(cur_x * (1 + u(e)), cur_y * (1 + u(e)), imgLength, maxWidth % step_y);
+				selectArea = Rect(x + cur_x + offset_x, y + cur_y + offset_y, imgLength, maxWidth % step_y);
 				originCompositeImg(selectArea).copyTo(generateImg);
 				cv::copyMakeBorder(generateImg, generateImg, 0, imgWidth - maxWidth % step_y, 0, 0, cv::BORDER_CONSTANT);
 				if(boundaryJudgment((cur_col - 1) * step_x, (cur_row - 1) * step_y, imgLength, imgWidth, center_x, center_y, radius)){
+					ofs<<cur_row<<"***"<<cur_col<<"***"<<to_string(cur_row) + "_" + to_string(cur_col) + ".jpg"<<"***"<<"(" + to_string((cur_col - 1) * step_x) + "," + to_string((cur_row - 1) * step_y) + ")"<<"***"<<offset_x<<"***"<<offset_y<<"***"<<"(" + to_string((cur_col - 1) * step_x + offset_x) + "," + to_string((cur_row - 1) * step_y + offset_y) + ")"<<endl;
 					imwrite(path, generateImg);
 				}
 
 			}else{
 
-				selectArea = Rect(cur_x * (1 + u(e)), cur_y * (1 + u(e)), imgLength, imgWidth);
+				// selectArea = Rect(cur_x * (1 + u(e)), cur_y * (1 + u(e)), imgLength, imgWidth);
+				selectArea = Rect(x + cur_x + offset_x, y + cur_y +offset_y, imgLength, imgWidth);
 				generateImg = originCompositeImg(selectArea);
 				if(boundaryJudgment((cur_col - 1) * step_x, (cur_row - 1) * step_y, imgLength, imgWidth, center_x, center_y, radius)){
+					ofs<<cur_row<<"***"<<cur_col<<"***"<<to_string(cur_row) + "_" + to_string(cur_col) + ".jpg"<<"***"<<"(" + to_string((cur_col - 1) * step_x) + "," + to_string((cur_row - 1) * step_y) + ")"<<"***"<<offset_x<<"***"<<offset_y<<"***"<<"(" + to_string((cur_col - 1) * step_x + offset_x) + "," + to_string((cur_row - 1) * step_y + offset_y) + ")"<<endl;
 					imwrite(path, generateImg);
 				}
 
 			}
 
-			cur_x += step_x * (1 + u(e));
+			// cur_x += step_x * (1 + u(e));
+			cur_x += step_x;
 			if(cur_x >= x)cur_x -= x;
 		}
-		cur_y += step_y * (1 + u(e));
+		// cur_y += step_y * (1 + u(e));
+		cur_y += step_y;
 		if(cur_y >= y)cur_y -= y;
 		cur_col = 1;
 		cur_x = 0;
 	}
+	ofs.close();
 	return;
 }
 
 int main()
 {	
-	int imgLength = 1024;
-	int imgWidth = 1024;
-	string sourceFilePath = "D://MyFiles//Code//C++//imgGenerateTools//1.jpg";
+	int imgLength = 1000;
+	int imgWidth = 1000;
+	string sourceFilePath = "D://MyFiles//Code//C++//imgGenerateTools//1.bmp";
 	string savePath = "D://MyFiles//Code//C++//imgGenerateTools//split";
 	float coverage = 0.5;
-	float maxError = 0.1;
+	float maxError = 5;
 	int maxLength = 5000;
 	int maxWidth = 5000;
 	int center_x = 2500; //圆心x
