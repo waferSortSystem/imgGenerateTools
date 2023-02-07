@@ -19,10 +19,10 @@ struct imgInfo
 	int row; //行
 	int col; //列
 	string name; //图像名称
-	string standardCoordinates; //标准坐标
+	cv::Point standardCoordinates; //标准坐标
 	int offset_x; //x偏移
 	int offset_y; //y偏移
-	string actualCoordinates; //实际坐标
+	cv::Point actualCoordinates; //实际坐标
 };
 
  
@@ -153,7 +153,7 @@ void generateImgFunction(int imgLength, int imgWidth, string sourceFilePath, str
 	ofstream ofs;						//定义流对象
     ofs.open("output.txt",ios::out);		//以写的方式打开文件
 	ofs<<"总计*"<<maxRowNumber<<"*行*"<<maxColNumber<<"*列"<<endl;
-    ofs<<"行"<<"*"<<"列"<<"*"<<"图像名称"<<"*"<<"标准坐标"<<"*"<<"x偏移"<<"*"<<"y偏移"<<"*"<<"偏移后坐标"<<endl;//写入
+    ofs<<"行"<<"*"<<"列"<<"*"<<"图像名称"<<"*"<<"标准坐标x"<<"*"<<"标准坐标y"<<"*"<<"x偏移"<<"*"<<"y偏移"<<"*"<<"偏移后坐标x"<<"*"<<"偏移后坐标y"<<endl;//写入
     
 	for(cur_row; cur_row <= maxRowNumber; cur_row++){
 
@@ -173,7 +173,7 @@ void generateImgFunction(int imgLength, int imgWidth, string sourceFilePath, str
 				originCompositeImg(selectArea).copyTo(generateImg);
 				cv::copyMakeBorder(generateImg, generateImg, 0, imgWidth - maxWidth % step_y, 0, imgLength - maxLength % step_x, cv::BORDER_CONSTANT);
 				if(boundaryJudgment((cur_col - 1) * step_x, (cur_row - 1) * step_y, imgLength, imgWidth, center_x, center_y, radius)){
-					ofs<<cur_row<<"*"<<cur_col<<"*"<<to_string(cur_row) + "_" + to_string(cur_col) + ".jpg"<<"*"<<"(" + to_string((cur_col - 1) * step_x) + "," + to_string((cur_row - 1) * step_y) + ")"<<"*"<<offset_x<<"*"<<offset_y<<"*"<<"(" + to_string((cur_col - 1) * step_x + offset_x) + "," + to_string((cur_row - 1) * step_y + offset_y) + ")"<<endl;
+					ofs<<cur_row<<"*"<<cur_col<<"*"<<to_string(cur_row) + "_" + to_string(cur_col) + ".jpg"<<"*"<<(cur_col - 1) * step_x<<"*"<<(cur_row - 1) * step_y<<"*"<<offset_x<<"*"<<offset_y<<"*"<<(cur_col - 1) * step_x + offset_x<<"*"<<(cur_row - 1) * step_y + offset_y<<endl;
 					imwrite(path, generateImg);
 				}
 
@@ -184,7 +184,7 @@ void generateImgFunction(int imgLength, int imgWidth, string sourceFilePath, str
 				originCompositeImg(selectArea).copyTo(generateImg);
 				cv::copyMakeBorder(generateImg, generateImg, 0, 0, 0, imgLength - maxLength % step_x, cv::BORDER_CONSTANT);
 				if(boundaryJudgment((cur_col - 1) * step_x, (cur_row - 1) * step_y, imgLength, imgWidth, center_x, center_y, radius)){
-					ofs<<cur_row<<"*"<<cur_col<<"*"<<to_string(cur_row) + "_" + to_string(cur_col) + ".jpg"<<"*"<<"(" + to_string((cur_col - 1) * step_x) + "," + to_string((cur_row - 1) * step_y) + ")"<<"*"<<offset_x<<"*"<<offset_y<<"*"<<"(" + to_string((cur_col - 1) * step_x + offset_x) + "," + to_string((cur_row - 1) * step_y + offset_y) + ")"<<endl;
+					ofs<<cur_row<<"*"<<cur_col<<"*"<<to_string(cur_row) + "_" + to_string(cur_col) + ".jpg"<<"*"<<(cur_col - 1) * step_x<<"*"<<(cur_row - 1) * step_y<<"*"<<offset_x<<"*"<<offset_y<<"*"<<(cur_col - 1) * step_x + offset_x<<"*"<<(cur_row - 1) * step_y + offset_y<<endl;
 					imwrite(path, generateImg);
 				}
 
@@ -195,7 +195,7 @@ void generateImgFunction(int imgLength, int imgWidth, string sourceFilePath, str
 				originCompositeImg(selectArea).copyTo(generateImg);
 				cv::copyMakeBorder(generateImg, generateImg, 0, imgWidth - maxWidth % step_y, 0, 0, cv::BORDER_CONSTANT);
 				if(boundaryJudgment((cur_col - 1) * step_x, (cur_row - 1) * step_y, imgLength, imgWidth, center_x, center_y, radius)){
-					ofs<<cur_row<<"*"<<cur_col<<"*"<<to_string(cur_row) + "_" + to_string(cur_col) + ".jpg"<<"*"<<"(" + to_string((cur_col - 1) * step_x) + "," + to_string((cur_row - 1) * step_y) + ")"<<"*"<<offset_x<<"*"<<offset_y<<"*"<<"(" + to_string((cur_col - 1) * step_x + offset_x) + "," + to_string((cur_row - 1) * step_y + offset_y) + ")"<<endl;
+					ofs<<cur_row<<"*"<<cur_col<<"*"<<to_string(cur_row) + "_" + to_string(cur_col) + ".jpg"<<"*"<<(cur_col - 1) * step_x<<"*"<<(cur_row - 1) * step_y<<"*"<<offset_x<<"*"<<offset_y<<"*"<<(cur_col - 1) * step_x + offset_x<<"*"<<(cur_row - 1) * step_y + offset_y<<endl;
 					imwrite(path, generateImg);
 				}
 
@@ -205,7 +205,7 @@ void generateImgFunction(int imgLength, int imgWidth, string sourceFilePath, str
 				selectArea = Rect(x + cur_x + offset_x, y + cur_y +offset_y, imgLength, imgWidth);
 				generateImg = originCompositeImg(selectArea);
 				if(boundaryJudgment((cur_col - 1) * step_x, (cur_row - 1) * step_y, imgLength, imgWidth, center_x, center_y, radius)){
-					ofs<<cur_row<<"*"<<cur_col<<"*"<<to_string(cur_row) + "_" + to_string(cur_col) + ".jpg"<<"*"<<"(" + to_string((cur_col - 1) * step_x) + "," + to_string((cur_row - 1) * step_y) + ")"<<"*"<<offset_x<<"*"<<offset_y<<"*"<<"(" + to_string((cur_col - 1) * step_x + offset_x) + "," + to_string((cur_row - 1) * step_y + offset_y) + ")"<<endl;
+					ofs<<cur_row<<"*"<<cur_col<<"*"<<to_string(cur_row) + "_" + to_string(cur_col) + ".jpg"<<"*"<<(cur_col - 1) * step_x<<"*"<<(cur_row - 1) * step_y<<"*"<<offset_x<<"*"<<offset_y<<"*"<<(cur_col - 1) * step_x + offset_x<<"*"<<(cur_row - 1) * step_y + offset_y<<endl;
 					imwrite(path, generateImg);
 				}
 
@@ -229,19 +229,18 @@ vector<imgInfo> readFile(string filename){
 // void readFile(string filename){
 	ifstream in(filename);
 	string line;
-	vector<vector<string>> vv;
 	int count = 1;
-	getline(in, line);
+	getline(in, line);//读第一行
 	stringstream _ss(line);
 	string _tmp;
 	vector<string> _v;
-	while (getline(_ss, _tmp, '*')){//按“，”隔开字符串
+	while (getline(_ss, _tmp, '*')){//按“*”隔开字符串
 		_v.push_back(_tmp);
 	}
 	int col = std::stoi(_v[3]);
 	vector<imgInfo> imgInfoList(std::stoi(_v[1]) * std::stoi(_v[3]) + 1);
-	getline(in, line);
-	while (getline(in, line)){
+	getline(in, line);//读第二行
+	while (getline(in, line)){//循环读从第三行开始的所有数据
 		stringstream ss(line);
 		string tmp;
 		vector<string> v;
@@ -252,20 +251,14 @@ vector<imgInfo> readFile(string filename){
 		info.row = std::stoi(v[0]);
 		info.col = std::stoi(v[1]);
 		info.name = v[2];
-		info.standardCoordinates = v[3];
-		info.offset_x = std::stoi(v[4]);
-		info.offset_y = std::stoi(v[5]);
-		info.actualCoordinates = v[6];
+		info.standardCoordinates.x = std::stoi(v[3]);
+		info.standardCoordinates.y = std::stoi(v[4]);
+		info.offset_x = std::stoi(v[5]);
+		info.offset_y = std::stoi(v[6]);
+		info.actualCoordinates.x = std::stoi(v[7]);
+		info.actualCoordinates.y = std::stoi(v[8]);
 		imgInfoList[info.row * col + info.col] = info;
-		// vv.push_back(v);
 	}
-	// for (auto row : vv){
-	// 	for (auto col : row){
-	// 		cout << col << "\t";
-	// 	}
-	// 	cout << endl;
-	// }
-	// cout << endl;
 	in.close();
 	return imgInfoList;
 }
@@ -278,21 +271,20 @@ int main()
 	string savePath = "D://MyFiles//Code//C++//imgGenerateTools//split";
 	float coverage = 0.5;
 	float maxError = 5;
-	int maxLength = 6000;
-	int maxWidth = 6000;
+	int maxLength = 5000;
+	int maxWidth = 5000;
 	int center_x = 2500; //圆心x
 	int center_y = 2500; //圆心y
-	int radius = 2500; //半径
+	int radius = 2000; //半径
 
+	//模拟图片生成
 	// generateImgFunction(imgLength, imgWidth, sourceFilePath, savePath, coverage, maxError, maxLength, maxWidth, center_x, center_y, radius);
 
-	string filename = "D://MyFiles//Code//C++//imgGenerateTools//test.txt";
-	vector<imgInfo> imgInfoList = readFile(filename);
-	// for(int i = 0; i < imgInfoList.size(); ++i){
-	// 	if(imgInfoList[i].name != ""){
-	// 		cout<<i<<"--"<<imgInfoList[i].name<<endl;
-	// 	}
-	// }
+	//读取模拟图片生成中输出的文件信息
+	// string filename = "D://MyFiles//Code//C++//imgGenerateTools//test.txt";
+	// vector<imgInfo> imgInfoList = readFile(filename);
+
+
 
 	return 0;
 }
